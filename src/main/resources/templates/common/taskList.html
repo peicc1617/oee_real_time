@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>任务（项目）列表</title>
+</head>
+<body>
+<div th:fragment="taskList" class="taskList">
+    <!--工具栏结束-->
+    <div id="right-menu" class="modal aside" data-body-scroll="false" data-offset="true" data-placement="right" data-fixed="true" data-backdrop="false" tabindex="-1" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header no-padding">
+                    <div class="table-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            <span class="white">&times;</span>
+                        </button>
+                        项目列表查看
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <table id="projectTable" data-toggle="table" >
+                        <thead>
+                        <tr>
+                            <th data-field="taskId" >任务ID</th>
+                            <th data-field="taskDescription" >任务描述</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div><!-- /.modal-content -->
+
+            <button class="aside-trigger btn btn-info btn-app btn-xs ace-settings-btn" data-target="#right-menu" data-toggle="modal" type="button">
+                <i data-icon1="fa-plus" data-icon2="fa-minus" class="ace-icon fa fa-plus bigger-110 icon-only"></i>
+            </button>
+        </div><!-- /.modal-dialog -->
+    </div>
+    <!--加载项目列表-->
+    <script src="js/init.js"></script>
+</div>
+</body>
+</html>

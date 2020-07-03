@@ -1,0 +1,16 @@
+/************ACE样式修改************/
+.sidebar-shortcuts .sidebar-shortcuts-large button{
+	height:32px;
+}
+
+.breadcrumb{
+	line-height:40px;
+}
+
+body{
+	font-family:"Microsoft YaHei","微软雅黑";
+}
+*{
+	font-family:"微软雅黑","Microsoft YaHei";
+	font-weight:500;
+}

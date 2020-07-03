@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta charset="utf-8" />
+		<title>OEE实时计算</title>
+
+		<meta name="description" content="" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+		<!-- bootstrap & fontawesome -->
+		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="assets/font-awesome/4.5.0/css/font-awesome.min.css" />
+
+		<!-- page specific plugin styles -->
+
+		<!-- text fonts -->
+		<link rel="stylesheet" href="assets/css/fonts.googleapis.com.css" />
+
+		<!-- ace styles -->
+		<link rel="stylesheet" href="assets/css/ace.min.css" class="ace-main-stylesheet" id="main-ace-style" />
+
+		<!--[if lte IE 9]>
+			<link rel="stylesheet" href="assets/css/ace-part2.min.css" class="ace-main-stylesheet" />
+		<![endif]-->
+		<link rel="stylesheet" href="assets/css/ace-skins.min.css" />
+		<link rel="stylesheet" href="assets/css/ace-rtl.min.css" />
+
+		<!--[if lte IE 9]>
+		  <link rel="stylesheet" href="assets/css/ace-ie.min.css" />
+		<![endif]-->
+
+		<!-- inline styles related to this page -->
+
+		<!-- ace settings handler -->
+		<script src="assets/js/ace-extra.min.js"></script>
+
+		<!-- HTML5shiv and Respond.js for IE8 to support HTML5 elements and media queries -->
+
+		<!--[if lte IE 8]>
+		<script src="assets/js/html5shiv.min.js"></script>
+		<script src="assets/js/respond.min.js"></script>
+		<![endif]-->
+		<!--jquery-->
+		<script src="assets/js/jquery-2.1.4.min.js"></script>
+        <link rel="stylesheet" href="assets/css/jquery-ui.min.css" />
+        <script src="assets/js/jquery-ui.min.js"></script>
+		<!--其他-->
+		<script src="assets/js/ace-elements.min.js"></script>
+		<script src="assets/js/ace.min.js"></script>
+		<script src="assets/js/jquery.raty.min.js"></script>
+        <!--bootstrap-table.js-->
+        <link rel="stylesheet" href="./bootstrap-table/bootstrap-table.min.css">
+        <script src="./bootstrap-table/bootstrap-table.min.js"></script>
+		<link href="https://s3-us-west-2.amazonaws.com/colors-css/2.2.0/colors.min.css" rel="stylesheet">
+		<!--引入echart-->
+		<script src="./echart/echarts.min.js"></script>
+		<script src="./js/api.js"></script>
+		<script src="./js/showDynamicOEE.js"></script>
+		<script src="./js/Main.js"></script>
+		<script type="text/javascript" src="./calendar/eventSetting.js"></script>
+		<script type="text/javascript" src="./js/showLoss.js"></script>
+		<script type="text/javascript" src="./js/event.js"></script>
+		<script type="text/javascript" src="./js/evaluateAndImprove.js"></script>
+	</head>
+
+	<body class="no-skin">
+		<!--插入任务列表-->
+		<div th:replace="common/taskList::taskList"></div>
+		<!--插入页面头部元素-->
+		<div th:replace="common/header::header"></div>
+		<div class="main-container ace-save-state" id="main-container">
+			<script type="text/javascript">
+				try{ace.settings.loadState('main-container')}catch(e){}
+			</script>
+
+			<!--插入侧边栏-->
+			<div th:replace="common/sidebar::sidebar"></div>
+			<div class="main-content">
+				<div class="main-content-inner">
+					<!--插入面包屑-->
+					<div th:replace="common/breadcrumbs::breadcrumbs"></div>
+					<div class="page-content">
+						<!--设置-->
+						<div class="ace-settings-container" id="ace-settings-container">
+							<div class="btn btn-app btn-xs btn-warning ace-settings-btn" id="ace-settings-btn">
+								<i class="ace-icon fa fa-cog bigger-130"></i>
+							</div>
+
+							<div class="ace-settings-box clearfix" id="ace-settings-box">
+								<div class="pull-left width-50">
+									<div class="ace-settings-item">
+										<div class="pull-left">
+											<select id="skin-colorpicker" class="hide">
+												<option data-skin="no-skin" value="#438EB9">#438EB9</option>
+												<option data-skin="skin-1" value="#222A2D">#222A2D</option>
+												<option data-skin="skin-2" value="#C6487E">#C6487E</option>
+												<option data-skin="skin-3" value="#D0D0D0">#D0D0D0</option>
+											</select>
+										</div>
+										<span>&nbsp; Choose Skin</span>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-navbar" autocomplete="off" />
+										<label class="lbl" for="ace-settings-navbar"> Fixed Navbar</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-sidebar" autocomplete="off" />
+										<label class="lbl" for="ace-settings-sidebar"> Fixed Sidebar</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-breadcrumbs" autocomplete="off" />
+										<label class="lbl" for="ace-settings-breadcrumbs"> Fixed Breadcrumbs</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-rtl" autocomplete="off" />
+										<label class="lbl" for="ace-settings-rtl"> Right To Left (rtl)</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-add-container" autocomplete="off" />
+										<label class="lbl" for="ace-settings-add-container">
+											Inside
+											<b>.container</b>
+										</label>
+									</div>
+								</div><!-- /.pull-left -->
+
+								<div class="pull-left width-50">
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-hover" autocomplete="off" />
+										<label class="lbl" for="ace-settings-hover"> Submenu on Hover</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-compact" autocomplete="off" />
+										<label class="lbl" for="ace-settings-compact"> Compact Sidebar</label>
+									</div>
+
+									<div class="ace-settings-item">
+										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-highlight" autocomplete="off" />
+										<label class="lbl" for="ace-settings-highlight"> Alt. Active Item</label>
+									</div>
+								</div><!-- /.pull-left -->
+							</div><!-- /.ace-settings-box -->
+						</div><!-- /.ace-settings-container -->
+
+						<div class="page-header">
+							<h1>OEE实时计算
+							</h1>
+							<div id="tableNameForTaskList" style="display:none">oee_data</div>
+						</div><!-- /.page-header -->
+						<div class="row">
+							<div class="col-xs-12">
+								<!-- PAGE CONTENT BEGINS -->
+								<div class="alert alert-info">
+									<button class="close" data-dismiss="alert">
+										<i class="ace-icon fa fa-times"></i>
+									</button>
+									此模块用于OEE实时计算
+								</div>
+								<!--<a href="#my-modal" role="button" class="bigger-125 bg-primary white" data-toggle="modal">-->
+                                <div id="tabs">
+									<ul>
+										<li class="active">
+											<a data-toggle="tab" href="#tabs-1">
+												<i class="green ace-icon fa fa-desktop bigger-120"></i>工业产品状态分析</a>
+										</li>
+										<li class="">
+											<a data-toggle="tab" href="#tabs-2" onclick="init()">
+												<i class="purple ace-icon fa fa-pencil-square-o bigger-120"></i>损失分析</a>
+										</li>
+										<li class="">
+											<a data-toggle="tab" href="#tabs-3" onclick="evaluateLevel()">
+												<i class="purple ace-icon fa fa-pencil-square-o bigger-120" ></i>评估改善</a>
+										</li>
+									</ul>
+									<div class="tab-pane active" id="tabs-1">
+										<!--实时数据:显示OEE-->
+										<div class="row" >
+											<div class="col-xs-12">
+												<!-- PAGE CONTENT BEGINS -->
+												<div class="row">
+													<div class="col-sm-9">
+														<div id="OEE_container" style="height: 400%;" ></div>
+													</div>
+													<div class="col-sm-3">
+														<div class="widget-box transparent">
+															<div class="widget-header">
+																<h4>事件类型</h4>
+															</div>
+
+															<div class="widget-body">
+																<div class="widget-main no-padding">
+																	<div id="external-events">
+																		<div class="external-event label-primary" data-class="label-primary">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			生产
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-success" onclick="produce()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-danger" onclick="">
+																				重置
+																			</button>
+
+																		</div>
+
+																		<div class="external-event label-success" data-class="label-success">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			计划停机
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Schedule_Stop_Time_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Schedule_Stop_Time_End()">
+																				结束
+																			</button>
+																		</div>
+
+																		<div class="external-event label-danger" data-class="label-danger">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			故障停机
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Equipment_Failure_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Equipment_Failure_End()">
+																				结束
+																			</button>
+																		</div>
+
+																		<div class="external-event label-purple" data-class="label-purple">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			更换产品
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Changeover_Time_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Changeover_Time_End()">
+																				结束
+																			</button>
+																		</div>
+
+																		<div class="external-event label-yellow" data-class="label-yellow">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			设置调整
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Setup_Adjust_Time_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Setup_Adjust_Time_End()">
+																				结束
+																			</button>
+																		</div>
+
+																		<div class="external-event label-pink" data-class="label-pink">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			空转
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Idling_Time_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Idling_Time_End()">
+																				结束
+																			</button>
+																		</div>
+
+																		<div class="external-event label-info" data-class="label-info">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			间歇停机
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn btn-warning" onclick="Small_Stop_Time_Start()">
+																				开始
+																			</button>
+																			<button type="button" class="btn btn-info" onclick="Small_Stop_Time_End()">
+																				结束
+																			</button>
+																		</div>
+																		<div class="external-event label-grey" data-class="label-grey">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			次品检测
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn-lg btn-primary" data-toggle="modal" data-target="#setDefect" >
+																				开始
+																			</button>
+																		</div>
+																		<div class="external-event label-warning " data-class="label-warning">
+																			<i class="ace-icon fa fa-arrows"></i>
+																			速度调整
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			<button type="button" class="btn-lg btn-primary " data-toggle="modal" data-target="#modifySpeed">
+																				开始
+																			</button>
+																		</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<!-- PAGE CONTENT ENDS -->
+											</div><!-- /.col -->
+										</div><!-- /.row -->
+										<!--仪表盘：显示时间开动率、性能开动率以及合格品率-->
+										<div class="row" >
+											<div class="col-xs-12">
+												<!-- PAGE CONTENT BEGINS -->
+												<div class="row">
+													<div class="col-sm-9">
+														<div id="Gauge_container" style="height: 400%;"></div>
+													</div>
+													<div class="col-sm-3">
+														<div class="widget-box transparent">
+															<div class="widget-header">
+																<h4>工业产品</h4>
+															</div>
+															<div class="widget-header">
+																<h4>工业产品状态：<span><input id="state" onclick="Get_Cycle_Time()"></span></h4>
+																<h4>理论循环时间：<span><input id="time1"></span></h4>
+																<h4>实际循环时间：<span><input id="time2"></span></h4>
+															</div>
+															<div>
+																<ul >
+																	<li>
+																		<img width="350" height="250" alt="150x150" src="image/icon/machine.JPG" />
+																	</li>
+																</ul>
+															</div>
+
+														</div>
+													</div>
+												</div>
+
+												<!-- PAGE CONTENT ENDS -->
+											</div><!-- /.col -->
+										</div><!-- /.row -->
+										<!--<div id="OEE_container1" style="height: 500px; width: 100%;"></div>-->
+									</div>
+									<div class="tab-pane" id="tabs-2">
+										<div class="row">
+											<div class="col-xs-12">
+												<!-- PAGE CONTENT BEGINS -->
+												<div >
+													<div class="row">
+														<div class="col-xs-12 col-lg-5">
+															<div class="left">
+																<h3 class="header blue lighter smaller ">
+																	<i class="ace-icon fa fa-calendar-o smaller-90 columns-left"></i>
+																	时间统计
+																</h3>
+															</div>
+
+															<div style="height: 100%; ">
+																<div id="Time_Container" style="height: 350px; width: 700px;"></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+														<div class="col-xs-12 col-lg-1 ">
+
+														</div>
+														<div class="col-xs-12 col-lg-5 ">
+															<div class="left">
+																<h3 class="header blue lighter smaller ">
+																	<i class="ace-icon fa fa-calendar-o smaller-90 columns-left"></i>
+																	损失统计
+																</h3>
+															</div>
+															<div >
+																<div id="Loss_Container" style="height: 350px; width: 700px;"></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="left" style="margin-left: 10px">
+															<h3 class="header blue lighter smaller ">
+																<i class="ace-icon fa fa-calendar-o smaller-90 columns-left"></i>
+																损失详情
+															</h3>
+														</div>
+														<div class="col-xs-12 col-lg-3 ">
+															<div >
+																<div id="Availability_Lost_Time_Container" style="height: 350px; width: 450px;"></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+
+														<div class="col-xs-12 col-lg-3">
+															<div >
+																<div id="Performance_Lost_Time_Container" style="height: 350px; width: 450px;"></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+														<div class="col-xs-12 col-lg-3">
+															<div >
+																<div id="Quality_Lost_Time_Container" style="height: 350px; width: 450px;"></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+														<div class="col-xs-12 col-lg-3">
+															<div >
+																<div id="Product_Container" style="height: 350px;width: 450px "></div>
+																<!--<div id="container" style="height: 500px; width: 100%;"></div>-->
+															</div>
+														</div>
+													</div>
+													<!--<div class="row">
+                                                        <div class="left" style="margin-left: 10px">
+                                                            <h3 class="header blue lighter smaller ">
+                                                                <i class="ace-icon fa fa-calendar-o smaller-90 columns-left"></i>
+                                                                主要损失
+                                                            </h3>
+                                                        </div>
+                                                        <div class="col-xs-12 col-lg-6">
+                                                            <div style="height: 100%; ">
+                                                                <div id="Top_Loss_Container" style="height: 450%; width: 700px;"></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-xs-12 col-lg-6">
+                                                            <div style="height: 100%; ">
+                                                                <div id="Count_Container" style="height: 450px; width: 700px;"></div>
+                                                                &lt;!&ndash;<div id="container" style="height: 500px; width: 100%;"></div>&ndash;&gt;
+                                                            </div>
+                                                        </div>
+                                                    </div>-->
+												</div>
+
+												<!-- PAGE CONTENT ENDS -->
+											</div><!-- /.col -->
+										</div><!-- /.row -->
+									</div>
+									<div class="tab-pane" id="tabs-3">
+										<div class="row">
+											<div class="col-xs-12">
+												<!-- PAGE CONTENT BEGINS -->
+												<div >
+													<div class="row">
+														<div class="col-xs-12 col-lg-12">
+															<div class="left" style="margin-left: 10px">
+																<h3 class="header blue lighter smaller ">
+																	<i class="ace-icon fa fa-calendar-o smaller-90 columns-left"></i>
+																	工业产品状态等级
+																</h3>
+																<table id="levelTable" data-toggle="table" data-row-style="rowStyle">
+																	<thead>
+																	<tr >
+																		<th data-field="id" class="center">ID</th>
+																		<th data-field="oee"  class="center">OEE数值</th>
+																		<th data-field="description" class="center">设备状态描述</th>
+																		<th data-field="level" class="center">OEE等级</th>
+																	</tr>
+																	</thead>
+																</table>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="left" style="margin-left: 10px">
+															<h3 class="header blue lighter smaller ">
+																<i class="ace-icon fa fa-info smaller-90"></i>
+																改善建议
+															</h3>
+														</div>
+														<div class="row">
+															<div class="col-xs-12 col-lg-6">
+																<div class="left" style="margin-left: 10px">
+																	<h3 class="header blue lighter smaller ">
+																		<a href="http://innovation.xjtu.edu.cn/InnovationAPPManageKits/">
+																			<i class="ace-icon fa fa-hand-o-right"></i>
+																			精益生产维护
+																		</a>
+																	</h3>
+																</div>
+															</div>
+															<div class="col-xs-12 col-lg-6">
+																<div class="left" style="margin-left: 10px">
+																	<h3 class="header blue lighter smaller ">
+																		<a href="http://innovation.xjtu.edu.cn/bpNetwork/">
+																			<i class="ace-icon fa fa-hand-o-right"></i>
+																			工业产品故障分析
+																		</a>
+																	</h3>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<!-- PAGE CONTENT ENDS -->
+											</div><!-- /.col -->
+										</div><!-- /.row -->
+									</div>
+                                </div>
+								<br />
+								<!-- PAGE CONTENT ENDS -->
+							</div><!-- /.col -->
+						</div><!-- /.row -->
+					</div><!-- /.page-content -->
+				</div>
+			</div><!-- /.main-content -->
+			<!--<div  th:include="footer::copy"></div>-->
+			<!--引入页脚元素-->
+			<div th:replace="common/footer::footer"></div>
+		</div><!-- /.main-container -->
+		<!--模态框-->
+		<!--修改速度-->
+		<div id="modifySpeed" class="modal fade " tabindex="-1" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content">
+					<div class="modal-body" style="width: 768px">
+						<form class="form-inline">
+							<div class="form-group">
+								<label for="Theoretical_Cycle_Time">理论循环速度</label>
+								<input type="text" class="form-control" id="Theoretical_Cycle_Time" >
+							</div>
+							<div class="form-group">
+								<label for="Actual_Cycle_Time">实际循环速度</label>
+								<input type="text" class="form-control" id="Actual_Cycle_Time" >
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" onclick="Set_Speed()">确定</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--残次品-->
+		<div id="setDefect" class="modal fade " tabindex="-1" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content">
+					<div class="modal-body" >
+						<form class="form-inline" >
+							<div class="form-group">
+								<label for="DefectValue">残次品数量</label>
+								<input type="text" class="form-control" id="DefectValue" >
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" onclick="Set_Reject()">确定</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+		</script>
+		<script src="assets/js/bootstrap.min.js"></script>
+
+		<!-- page specific plugin scripts -->
+
+		<!-- ace scripts -->
+
+
+		<!-- inline scripts related to this page -->
+		<script type="text/javascript">
+			jQuery(function($) {
+				$('.modal.aside').ace_aside();
+				
+				$('#aside-inside-modal').addClass('aside').ace_aside({container: '#my-modal > .modal-dialog'});
+				
+				//$('#top-menu').modal('show')
+				
+				$(document).one('ajaxloadstart.page', function(e) {
+					//in ajax mode, remove before leaving page
+					$('.modal.aside').remove();
+					$(window).off('.aside')
+				});
+			})
+		</script>
+        <!--自定义jsscript-->
+        <script>
+            //jquery tabs
+            $( "#tabs" ).tabs();
+        </script>
+	<!--评价结果-->
+		<script>
+			$('.rating').raty({
+				'cancel' : true,
+				'half': true,
+				'starType' : 'i'
+			})
+		</script>
+	</body>
+</html>
